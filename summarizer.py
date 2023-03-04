@@ -17,6 +17,8 @@ openai.api_key = str(os.environ.get('OPEN_AI_TOKEN')).strip()
 # APIトークンとチャンネルIDを設定する
 TOKEN = str(os.environ.get('SLACK_BOT_TOKEN')).strip()
 CHANNEL_ID = str(os.environ.get('SLACK_POST_CHANNEL_ID')).strip()
+# 要約チャンネルは無視する。,で複数指定されることを想定している
+SUMMARY_CHANNEL_IDS = str(os.environ.get('SUMMARY_CHANNEL_IDS')).strip().split(',')
 
 # 取得する期間を計算する
 HOURS_BACK = 25
@@ -34,6 +36,18 @@ end_time = datetime(now.year, now.month, now.day,
 # Slack APIクライアントを初期化する
 client = WebClient(token=TOKEN)
 
+# OpenAIのAPIを使って要約を行う
+@backoff.on_exception(backoff.expo, openai.error.RateLimitError)
+def summarize(_text):
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        temperature=0,
+        messages=[
+            {"role": "system", "content": "チャットログのフォーマットは、「本文\\n」である。「\\n」は改行である。チャットログは「&&」で複数人のチャットが連結されている。ごはん、トイレ、体調を気にしている場合は猫のチャンネルである。猫のチャンネルの場合、発言者たちはその猫、あるいは複数の猫たちの事を会話している。猫の名前はひらがな、カタカナ、漢字、愛称、くんづけ、ちゃんづけで同じ猫を指していることがある。「まつとたけ」のように複数の猫を扱っていることがある。猫のチャンネルでない場合は、保護猫団体の会運営について会話している。過去のチャットログは含まれないので意味を失っている可能性がある。以上を踏まえて指示に従え"},
+            {"role": "user", "content": f"「- 猫の名前: \\n- 健康状態：\\n- 薬：\\n- 食事：\\n- トイレ：\\n- その他：」のフォーマットを使用し、該当する行の「：」の右に内容を要約する(内容なし、特に記載なし、不明な場合は「不明」と記載する)。要約が元々のチャットログを改編してミスリードを起こす内容にならないよう事実を述べるよう厳重に注意する。以上を踏まえて、下記を箇条書きで要約せよ。\n\n{_text}"}
+        ]
+    )
+    return response["choices"][0]["message"]['content']
 
 # 指定したチャンネルの履歴を取得する
 def load_merge_message(channel_id):
@@ -122,12 +136,8 @@ def load_merge_message(channel_id):
             _text = _text.replace(match, f"#{channel_name} ")
         messages_text.append(f"{sender_name}: {_text}")
 
-    strip_messages_text = [re.sub(r"[a-zA-Z0-9._-]+: ", "", msg)
-                           .replace(":sweat_drops:", "")
-                           .replace("\\n", "")
-                           .strip()
-                           for msg in messages_text]
-    print('strip_messages_text', strip_messages_text)
+    strip_messages_text = [re.sub(r"[a-zA-Z0-9._-]+:", "", msg).strip() for msg in messages_text]
+    # print('strip_messages_text', strip_messages_text)
 
     # リストからテキストを結合して文字列を作成
     merge_message_text = "&&".join(strip_messages_text)
@@ -137,20 +147,6 @@ def load_merge_message(channel_id):
         return None
     else:
         return merge_message_text
-
-
-# OpenAIのAPIを使って要約を行う
-@backoff.on_exception(backoff.expo, openai.error.RateLimitError)
-def summarize(text):
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        temperature=0.5,
-        messages=[
-            {"role": "system", "content": "複数の本文が&&で連結されている事を踏まえて指示に従え"},
-            {"role": "user", "content": f"下記を箇条書きで要約しろ。1行ずつの説明ではない。全体は短く理解しやすく\n\n{text}"}
-        ]
-    )
-    return response["choices"][0]["message"]['content']
 
 
 # ユーザーIDからユーザー名に変換するために、ユーザー情報を取得する
@@ -175,11 +171,13 @@ except SlackApiError as e:
     print("Error : {}".format(e))
     exit(1)
 
-# 300文字を超過するメッセージを格納するリストを作成する
 long_messages = []
 print('len(channels)', len(channels))
 # 全てのチャンネルからメッセージを読み込む
 for channel in channels:
+    if channel["id"] in SUMMARY_CHANNEL_IDS:
+        continue
+
     message = load_merge_message(channel["id"])
     if message is None:
         continue
@@ -191,17 +189,20 @@ for channel in channels:
 sorted_messages = sorted(long_messages, key=lambda x: len(x['message']), reverse=True)[:REQUEST_CHANNEL_LIMIT]
 
 print('len(sorted_messages): ', len(sorted_messages))
-print('sorted_messages', sorted_messages)
 
 result_text = []
 for message in sorted_messages:
-    text = summarize(message['message'])
-    result_text.append(f"----\n<#{message['channel_id']}>\n{text}")
+    lines = summarize(message['message']).split('\n')
+    filtered_lines = [line for line in lines if "：不明" not in line]
+    text = '\n'.join(filtered_lines)
+    print('text', text)
+
+    result_text.append(f"<#{message['channel_id']}>\n{text}")
 
 title = f"{yesterday.strftime('%Y/%m/%d')}の要約ニャン"
 
 response = client.chat_postMessage(
     channel=CHANNEL_ID,
-    text=title + "\n\n" + "\n\n".join(result_text)
+    text=title + "\n\n" + "\n\n".join(result_text) + "\n\n★AIによる要約は誤りが含まれることがあります。前回投稿の考慮も欠如しています。日毎の出来毎を残し、理解と見返しを助ける事が目的です。\n★お薬や体調に関することは実際のチャンネルを追いかけたり、お世話マニュアルはなるべく読む、一緒にお世話に入っている方やSlackで状況を聞くようにしてください"
 )
 print("Message posted: ", response["ts"])

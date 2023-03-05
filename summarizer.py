@@ -58,6 +58,7 @@ def load_merge_message(channel_id):
             oldest=start_time.timestamp(),
             latest=end_time.timestamp()
         )
+        print('result', result)
     except SlackApiError as e:
         if e.response['error'] == 'not_in_channel':
             response = client.conversations_join(
@@ -91,6 +92,7 @@ def load_merge_message(channel_id):
             latest=end_time.timestamp(),
             cursor=result["response_metadata"]["next_cursor"]
         )
+        print('result has_more', result)
         _messages.extend(result["messages"])
     for _message in _messages[::-1]:
         if "bot_id" in _message:
@@ -195,9 +197,8 @@ for message in sorted_messages:
     lines = summarize(message['message']).split('\n')
     filtered_lines = [line for line in lines if "：不明" not in line]
     text = '\n'.join(filtered_lines)
-    print('text', text)
 
-    result_text.append(f"<#{message['channel_id']}>\n{text}")
+    result_text.append(f"<#{message['channel_id']}> XXXここに先頭のメッセージリンクを貼り付けるXXX \n{text}")
 
 title = f"{yesterday.strftime('%Y/%m/%d')}の要約ニャン"
 

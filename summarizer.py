@@ -16,6 +16,7 @@ openai.api_key = str(os.environ.get('OPEN_AI_TOKEN')).strip()
 
 # APIトークンとチャンネルIDを設定する
 TOKEN = str(os.environ.get('SLACK_BOT_TOKEN')).strip()
+SLACK_DOMAIN = str(os.environ.get('SLACK_DOMAIN')).strip()
 CHANNEL_ID = str(os.environ.get('SLACK_POST_CHANNEL_ID')).strip()
 # 要約チャンネルは無視する。,で複数指定されることを想定している
 SUMMARY_CHANNEL_IDS = str(os.environ.get('SUMMARY_CHANNEL_IDS')).strip().split(',')
@@ -58,7 +59,6 @@ def load_merge_message(channel_id):
             oldest=start_time.timestamp(),
             latest=end_time.timestamp()
         )
-        print('result', result)
     except SlackApiError as e:
         if e.response['error'] == 'not_in_channel':
             response = client.conversations_join(
@@ -84,6 +84,7 @@ def load_merge_message(channel_id):
         return None
 
     messages_text = []
+    first_message_ts = result["messages"][-1]['ts']
 
     while result["has_more"]:
         result = client.conversations_history(
@@ -94,6 +95,7 @@ def load_merge_message(channel_id):
         )
         print('result has_more', result)
         _messages.extend(result["messages"])
+
     for _message in _messages[::-1]:
         if "bot_id" in _message:
             continue
@@ -148,7 +150,7 @@ def load_merge_message(channel_id):
     if len(strip_messages_text) < SUMMARY_TARGET_CHAT_COUNT_LENGTH and len(merge_message_text) < SUMMARY_TARGET_TEXT_LENGTH:
         return None
     else:
-        return merge_message_text
+        return merge_message_text, first_message_ts
 
 
 # ユーザーIDからユーザー名に変換するために、ユーザー情報を取得する
@@ -180,11 +182,13 @@ for channel in channels:
     if channel["id"] in SUMMARY_CHANNEL_IDS:
         continue
 
-    message = load_merge_message(channel["id"])
-    if message is None:
+    _load_merge_message = load_merge_message(channel["id"])
+    if _load_merge_message is None:
         continue
 
-    long_message_dict = {"channel_id": channel["id"], "message": message}
+    message, first_ts = _load_merge_message
+
+    long_message_dict = {"channel_id": channel["id"], "message": message, "first_ts": first_ts}
     long_messages.append(long_message_dict)
 
 # メッセージ長で並び替え、先頭REQUEST_CHANNEL_LIMITの辞書を取得する
@@ -198,12 +202,16 @@ for message in sorted_messages:
     filtered_lines = [line for line in lines if "：不明" not in line]
     text = '\n'.join(filtered_lines)
 
-    result_text.append(f"<#{message['channel_id']}> XXXここに先頭のメッセージリンクを貼り付けるXXX \n{text}")
+    ts = 'p' + message['first_ts'].replace('.', '')
+    first_link = f"{SLACK_DOMAIN}/archives/{message['channel_id']}/{ts}"
+
+    result_text.append(f"<#{message['channel_id']}> {first_link}\n{text}")
 
 title = f"{yesterday.strftime('%Y/%m/%d')}の要約ニャン"
 
 response = client.chat_postMessage(
     channel=CHANNEL_ID,
-    text=title + "\n\n" + "\n\n".join(result_text) + "\n\n★AIによる要約は誤りが含まれることがあります。前回投稿の考慮も欠如しています。日毎の出来毎を残し、理解と見返しを助ける事が目的です。\n★お薬や体調に関することは実際のチャンネルを追いかけたり、お世話マニュアルはなるべく読む、一緒にお世話に入っている方やSlackで状況を聞くようにしてください"
+    type="mrkdwn",
+    text=title + "\n\n" + "\n\n".join(result_text) + "\n\n★AIによる要約は誤りが含まれることがあります。前回投稿の考慮も欠如しています。日毎の出来毎を残し、理解と見返しを助ける事が目的です。\n★お薬や体調に関することは実際のチャンネルを追いかけたり、お世話マニュアルはなるべく読む、一緒にお世話に入っている方やSlackで状況を聞くようにしてください",
 )
 print("Message posted: ", response["ts"])

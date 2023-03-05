@@ -21,5 +21,6 @@ jobs:
         env:
           OPEN_AI_TOKEN: ${{ secrets.OPEN_AI_TOKEN }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_DOMAIN: ${{ secrets.SLACK_DOMAIN }}
           SLACK_POST_CHANNEL_ID: ${{ secrets.SLACK_POST_CHANNEL_ID }}
           SUMMARY_CHANNEL_IDS: ${{ secrets.SUMMARY_CHANNEL_IDS }}

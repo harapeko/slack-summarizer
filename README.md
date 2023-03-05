@@ -54,6 +54,12 @@ GitHub Actions で毎日午前 5 時に動くようになっています。こ�
 - 画面左の"Install App"をクリックし、右に出る"Install App to Workspace"をクリックして、アプリをワークスペースにインストールします。インストールが完了すると、bot の OAuth アクセストークンが表示されます
 - この`xoxb-`で始まるトークンをコピーして Value に貼り付けます
 
+#### SLACK_DOMAIN
+
+- SLACKワークスペースのドメイン
+- 例：example.slack.com
+- チャンネルごとの最初のメッセージリンクを作成するのに使用する(日付移動の代替)
+
 #### SLACK_POST_CHANNEL_ID
 
 - 要約結果を投稿する Slack の channel_id

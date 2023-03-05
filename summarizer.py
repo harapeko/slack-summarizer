@@ -22,17 +22,16 @@ CHANNEL_ID = str(os.environ.get('SLACK_POST_CHANNEL_ID')).strip()
 SUMMARY_CHANNEL_IDS = str(os.environ.get('SUMMARY_CHANNEL_IDS')).strip().split(',')
 
 # 取得する期間を計算する
-HOURS_BACK = 25
 SUMMARY_TARGET_CHAT_COUNT_LENGTH = 3
 SUMMARY_TARGET_TEXT_LENGTH = 300
 REQUEST_CHANNEL_LIMIT = 999
+# 昨日0時から今日0時を範囲とする
 JST = pytz.timezone('Asia/Tokyo')
 now = datetime.now(JST)
-yesterday = now - timedelta(hours=HOURS_BACK)
-start_time = datetime(yesterday.year, yesterday.month, yesterday.day,
-                      yesterday.hour, yesterday.minute, yesterday.second)
-end_time = datetime(now.year, now.month, now.day,
-                    now.hour, now.minute, now.second)
+start_of_today = datetime(now.year, now.month, now.day)
+start_of_yesterday = start_of_today - timedelta(days=1)
+start_time = JST.localize(datetime.combine(start_of_yesterday, datetime.min.time()))
+end_time = JST.localize(datetime.combine(start_of_today, datetime.min.time()))
 
 # Slack APIクライアントを初期化する
 client = WebClient(token=TOKEN)

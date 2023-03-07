@@ -207,7 +207,7 @@ for message in sorted_messages:
 
     result_text.append(f"<#{message['channel_id']}> {first_link}\n{text}")
 
-title = f"{yesterday.strftime('%Y/%m/%d')}の要約ニャン"
+title = f"{start_of_yesterday.strftime('%Y/%m/%d')}の要約ニャン"
 
 response = client.chat_postMessage(
     channel=CHANNEL_ID,

@@ -40,7 +40,7 @@ client = WebClient(token=TOKEN)
 @backoff.on_exception(backoff.expo, openai.error.RateLimitError)
 def summarize(_text):
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4",
         temperature=0,
         messages=[
             {"role": "system", "content": "チャットログのフォーマットは、「本文\\n」である。「\\n」は改行である。チャットログは「&&」で複数人のチャットが連結されている。ごはん、トイレ、体調を気にしている場合は猫のチャンネルである。猫のチャンネルの場合、発言者たちはその猫、あるいは複数の猫たちの事を会話している。猫の名前はひらがな、カタカナ、漢字、愛称、くんづけ、ちゃんづけで同じ猫を指していることがある。「まつとたけ」のように複数の猫を扱っていることがある。猫のチャンネルでない場合は、保護猫団体の会運営について会話している。過去のチャットログは含まれないので意味を失っている可能性がある。以上を踏まえて指示に従え"},

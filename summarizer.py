@@ -204,13 +204,13 @@ print('len(sorted_messages): ', len(sorted_messages))
 result_text = []
 for message in sorted_messages:
     lines = summarize(message['message']).split('\n')
-    filtered_lines = [line for line in lines if "：不明" not in line]
-    text = '\n'.join(filtered_lines)
-
-    ts = 'p' + message['first_ts'].replace('.', '')
-    first_link = f"{SLACK_DOMAIN}/archives/{message['channel_id']}/{ts}"
-
-    result_text.append(f"<#{message['channel_id']}> {first_link}\n{text}")
+    # filtered_lines = [line for line in lines if "：不明" not in line]
+    # text = '\n'.join(filtered_lines)
+    #
+    # ts = 'p' + message['first_ts'].replace('.', '')
+    # first_link = f"{SLACK_DOMAIN}/archives/{message['channel_id']}/{ts}"
+    #
+    # result_text.append(f"<#{message['channel_id']}> {first_link}\n{text}")
 
 title = f"{start_of_yesterday.strftime('%Y/%m/%d')}の要約ニャン"
 

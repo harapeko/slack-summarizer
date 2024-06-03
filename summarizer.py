@@ -49,7 +49,8 @@ def summarize(_text):
         ]
     )
     print('summarize:end')
-    return response["choices"][0]["message"]['content']
+    return "test"
+    # return response["choices"][0]["message"]['content']
 
 # 指定したチャンネルの履歴を取得する
 def load_merge_message(channel_id):
@@ -206,7 +207,7 @@ print('len(sorted_messages): ', len(sorted_messages))
 result_text = []
 for message in sorted_messages:
     print('message', message)
-    # lines = summarize(message['message']).split('\n')
+    lines = summarize(message['message']).split('\n')
     # filtered_lines = [line for line in lines if "：不明" not in line]
     # text = '\n'.join(filtered_lines)
     #

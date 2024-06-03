@@ -20,6 +20,7 @@ SLACK_DOMAIN = str(os.environ.get('SLACK_DOMAIN')).strip()
 CHANNEL_ID = str(os.environ.get('SLACK_POST_CHANNEL_ID')).strip()
 # 要約チャンネルは無視する。,で複数指定されることを想定している
 SUMMARY_CHANNEL_IDS = str(os.environ.get('SUMMARY_CHANNEL_IDS')).strip().split(',')
+print(SUMMARY_CHANNEL_IDS)
 
 # 取得する期間を計算する
 SUMMARY_TARGET_CHAT_COUNT_LENGTH = 3

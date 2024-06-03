@@ -157,6 +157,7 @@ def load_merge_message(channel_id):
 try:
     users_info = client.users_list()
     users = users_info['members']
+    users = [user for user in users if user['deleted'] == False]
     print('users')
     print(users)
 except SlackApiError as e:

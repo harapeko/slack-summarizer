@@ -9,12 +9,15 @@ from zoneinfo import ZoneInfo
 from datetime import datetime, timedelta, time
 from slack_sdk.errors import SlackApiError
 from slack_sdk import WebClient
-
 import openai
+from openai import OpenAI
 
-openai.api_key = str(os.environ.get('OPEN_AI_TOKEN')).strip()
+# openai.api_key = str(os.environ.get('OPEN_AI_TOKEN')).strip()
 
-
+client_openai = OpenAI(
+    # This is the default and can be omitted
+    api_key=str(os.environ.get('OPEN_AI_TOKEN')).strip()
+)
 
 # APIトークンとチャンネルIDを設定する
 TOKEN = str(os.environ.get('SLACK_BOT_TOKEN')).strip()
@@ -39,11 +42,12 @@ end_time = datetime.combine(start_of_today, time.min).replace(tzinfo=JST)
 client = WebClient(token=TOKEN)
 
 # OpenAIのAPIを使って要約を行う
-@backoff.on_exception(backoff.expo, openai.error.RateLimitError)
+@backoff.on_exception(backoff.expo, openai.RateLimitError)
 def summarize(_text):
     print('summarize:start')
     print('_text', _text)
-    response = openai.ChatCompletion.create(
+    # response = openai.ChatCompletion.create(
+    response = client_openai.chat.completions.create(
         model="gpt-3.5-turbo",
         temperature=0.3,
         messages=[

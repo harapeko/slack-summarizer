@@ -1,4 +1,4 @@
 pytz==2024.1
 slack_sdk==3.27.2
-openai==1.30.5
+openai==0.28.0
 backoff==2.2.1

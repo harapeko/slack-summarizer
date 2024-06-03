@@ -163,19 +163,22 @@ except SlackApiError as e:
     print("Error : {}".format(e))
     exit(1)
 
-# # チャンネルIDからチャンネル名に変換するために、チャンネル情報を取得する
-# try:
-#     channels_info = client.conversations_list(
-#         types="public_channel",
-#         exclude_archived=True,
-#     )
-#     channels = [channel for channel in channels_info['channels']
-#                 if not channel["is_archived"] and channel["is_channel"]]
-#     channels = sorted(channels, key=lambda x: int(re.findall(
-#         r'\d+', x["name"])[0]) if re.findall(r'\d+', x["name"]) else float('inf'))
-# except SlackApiError as e:
-#     print("Error : {}".format(e))
-#     exit(1)
+# チャンネルIDからチャンネル名に変換するために、チャンネル情報を取得する
+try:
+    channels_info = client.conversations_list(
+        types="public_channel",
+        exclude_archived=True,
+    )
+    channels = [channel for channel in channels_info['channels']
+                if not channel["is_archived"] and channel["is_channel"]]
+    channels = [entry for entry in channels if entry['name'].startswith(('-', '_'))]
+    channels = sorted(channels, key=lambda x: int(re.findall(
+        r'\d+', x["name"])[0]) if re.findall(r'\d+', x["name"]) else float('inf'))
+    print('channels')
+    print(channels)
+except SlackApiError as e:
+    print("Error : {}".format(e))
+    exit(1)
 #
 # long_messages = []
 # print('len(channels)', len(channels))

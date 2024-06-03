@@ -154,12 +154,12 @@ def load_merge_message(channel_id):
 
 
 # ユーザーIDからユーザー名に変換するために、ユーザー情報を取得する
+channels = []
 try:
     users_info = client.users_list()
     users = users_info['members']
     users = [user for user in users if user['deleted'] == False]
-    print('users')
-    print(users)
+    print('users', users)
 except SlackApiError as e:
     print("Error : {}".format(e))
     exit(1)
@@ -175,33 +175,32 @@ try:
     channels = [entry for entry in channels if entry['name'].startswith(('-', '_'))]
     channels = sorted(channels, key=lambda x: int(re.findall(
         r'\d+', x["name"])[0]) if re.findall(r'\d+', x["name"]) else float('inf'))
-    print('channels')
-    print(channels)
+    print('channels', channels)
+    print('len(channels)', len(channels))
 except SlackApiError as e:
     print("Error : {}".format(e))
     exit(1)
-#
-# long_messages = []
-# print('len(channels)', len(channels))
-# # 全てのチャンネルからメッセージを読み込む
-# for channel in channels:
-#     if channel["id"] in SUMMARY_CHANNEL_IDS:
-#         continue
-#
-#     _load_merge_message = load_merge_message(channel["id"])
-#     if _load_merge_message is None:
-#         continue
-#
-#     message, first_ts = _load_merge_message
-#
-#     long_message_dict = {"channel_id": channel["id"], "message": message, "first_ts": first_ts}
-#     long_messages.append(long_message_dict)
-#
-# # メッセージ長で並び替え、先頭REQUEST_CHANNEL_LIMITの辞書を取得する
-# sorted_messages = sorted(long_messages, key=lambda x: len(x['message']), reverse=True)[:REQUEST_CHANNEL_LIMIT]
-#
-# print('len(sorted_messages): ', len(sorted_messages))
-#
+
+long_messages = []
+# 全てのチャンネルからメッセージを読み込む
+for channel in channels:
+    if channel["id"] in SUMMARY_CHANNEL_IDS:
+        continue
+
+    _load_merge_message = load_merge_message(channel["id"])
+    if _load_merge_message is None:
+        continue
+
+    message, first_ts = _load_merge_message
+
+    long_message_dict = {"channel_id": channel["id"], "message": message, "first_ts": first_ts}
+    long_messages.append(long_message_dict)
+
+# メッセージ長で並び替え、先頭REQUEST_CHANNEL_LIMITの辞書を取得する
+sorted_messages = sorted(long_messages, key=lambda x: len(x['message']), reverse=True)[:REQUEST_CHANNEL_LIMIT]
+
+print('len(sorted_messages): ', len(sorted_messages))
+
 result_text = []
 # for message in sorted_messages:
 #     lines = summarize(message['message']).split('\n')

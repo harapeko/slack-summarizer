@@ -14,6 +14,8 @@ import openai
 
 openai.api_key = str(os.environ.get('OPEN_AI_TOKEN')).strip()
 
+
+
 # APIトークンとチャンネルIDを設定する
 TOKEN = str(os.environ.get('SLACK_BOT_TOKEN')).strip()
 SLACK_DOMAIN = str(os.environ.get('SLACK_DOMAIN')).strip()

@@ -4,11 +4,11 @@
 import os
 import re
 import time
-import pytz
 import backoff
+from zoneinfo import ZoneInfo
+from datetime import datetime, timedelta, time
 from slack_sdk.errors import SlackApiError
 from slack_sdk import WebClient
-from datetime import datetime, timedelta
 
 import openai
 
@@ -27,12 +27,12 @@ SUMMARY_TARGET_CHAT_COUNT_LENGTH = 3
 SUMMARY_TARGET_TEXT_LENGTH = 300
 REQUEST_CHANNEL_LIMIT = 999
 # 昨日0時から今日0時を範囲とする
-JST = pytz.timezone('Asia/Tokyo')
+JST = ZoneInfo('Asia/Tokyo')
 now = datetime.now(JST)
-start_of_today = datetime(now.year, now.month, now.day)
+start_of_today = datetime(now.year, now.month, now.day, tzinfo=JST)
 start_of_yesterday = start_of_today - timedelta(days=1)
-start_time = JST.localize(datetime.combine(start_of_yesterday, datetime.min.time()))
-end_time = JST.localize(datetime.combine(start_of_today, datetime.min.time()))
+start_time = datetime.combine(start_of_yesterday, time.min).replace(tzinfo=JST)
+end_time = datetime.combine(start_of_today, time.min).replace(tzinfo=JST)
 
 # Slack APIクライアントを初期化する
 client = WebClient(token=TOKEN)
@@ -197,7 +197,7 @@ client = WebClient(token=TOKEN)
 #
 # print('len(sorted_messages): ', len(sorted_messages))
 #
-# result_text = []
+result_text = []
 # for message in sorted_messages:
 #     lines = summarize(message['message']).split('\n')
 #     filtered_lines = [line for line in lines if "：不明" not in line]
@@ -208,11 +208,11 @@ client = WebClient(token=TOKEN)
 #
 #     result_text.append(f"<#{message['channel_id']}> {first_link}\n{text}")
 #
-# title = f"{start_of_yesterday.strftime('%Y/%m/%d')}の要約ニャン"
+title = f"{start_of_yesterday.strftime('%Y/%m/%d')}の要約ニャン"
 
 response = client.chat_postMessage(
     channel=CHANNEL_ID,
     type="mrkdwn",
-    text="★AIによる要約は誤りが含まれることがあります。前回投稿の考慮も欠如しています。日毎の出来毎を残し、理解と見返しを助ける事が目的です。\n★お薬や体調に関することは実際のチャンネルを追いかけたり、お世話マニュアルはなるべく読む、一緒にお世話に入っている方やSlackで状況を聞くようにしてください",
+    text=title + "\n\n" + "\n\n".join(result_text) + "\n\n★AIによる要約は誤りが含まれることがあります。前回投稿の考慮も欠如しています。日毎の出来毎を残し、理解と見返しを助ける事が目的です。\n★お薬や体調に関することは実際のチャンネルを追いかけたり、お世話マニュアルはなるべく読む、一緒にお世話に入っている方やSlackで状況を聞くようにしてください",
 )
 print("Message posted: ", response["ts"])

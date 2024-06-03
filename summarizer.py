@@ -3,7 +3,7 @@
 # by [masuidrive](https://twitter.com/masuidrive) @ [Bloom&Co., Inc.](https://www.bloom-and-co.com/) 2023- [APACHE LICENSE, 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 import os
 import re
-import time
+import time as tm
 import backoff
 from zoneinfo import ZoneInfo
 from datetime import datetime, timedelta, time
@@ -76,7 +76,7 @@ def load_merge_message(channel_id):
             )
             if not response["ok"]:
                 raise SlackApiError("conversations_join() failed")
-            time.sleep(5)  # チャンネルにjoinした後、少し待つ
+            tm.sleep(5)  # チャンネルにjoinした後、少し待つ
 
             result = client.conversations_history(
                 channel=channel_id,
@@ -168,8 +168,8 @@ channels = []
 try:
     users_info = client.users_list()
     users = users_info['members']
-    users = [user for user in users if user['deleted'] == False]
-    print('users', users)
+    # users = [user for user in users if user['deleted'] == False]
+    # print('users', users)
 except SlackApiError as e:
     print("Error : {}".format(e))
     exit(1)
@@ -183,10 +183,10 @@ try:
     )
     channels = [channel for channel in channels_info['channels']
                 if not channel["is_archived"] and channel["is_channel"]]
-    channels = [entry for entry in channels if entry['name'].startswith(('-', '_'))]
+    # channels = [entry for entry in channels if entry['name'].startswith(('-', '_'))]
     channels = sorted(channels, key=lambda x: int(re.findall(
         r'\d+', x["name"])[0]) if re.findall(r'\d+', x["name"]) else float('inf'))
-    print('channels', channels)
+    # print('channels', channels)
     print('len(channels)', len(channels))
 except SlackApiError as e:
     print("Error : {}".format(e))

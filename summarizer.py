@@ -205,7 +205,8 @@ print('len(sorted_messages): ', len(sorted_messages))
 
 result_text = []
 for message in sorted_messages:
-    lines = summarize(message['message']).split('\n')
+    print('message', message)
+    # lines = summarize(message['message']).split('\n')
     # filtered_lines = [line for line in lines if "：不明" not in line]
     # text = '\n'.join(filtered_lines)
     #

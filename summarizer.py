@@ -67,7 +67,7 @@ def load_merge_message(channel_id):
             channel=channel_id,
             oldest=start_time.timestamp(),
             latest=end_time.timestamp(),
-            limit=200,
+            limit=999,
         )
     except SlackApiError as e:
         if e.response['error'] == 'not_in_channel':

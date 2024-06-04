@@ -57,8 +57,7 @@ def summarize(_text):
     )
     print(response)
     print('summarize:end')
-    # return "test"
-    return response["choices"][0]["message"]['content']
+    return response.choices[0].message.content
 
 # 指定したチャンネルの履歴を取得する
 def load_merge_message(channel_id):

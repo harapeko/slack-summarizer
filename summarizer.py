@@ -55,6 +55,7 @@ def summarize(_text):
             {"role": "user", "content": f"「- 猫の名前: \\n- 健康状態：\\n- 薬：\\n- 食事：\\n- トイレ：\\n- その他：」のフォーマットを使用し、該当する行の「：」の右に内容を要約する(内容なし、特に記載なし、不明な場合は「不明」と記載する)。要約が元々のチャットログを改編してミスリードを起こす内容にならないよう事実を述べるよう厳重に注意する。以上を踏まえて、下記を箇条書きで要約せよ。\n\n{_text}"}
         ]
     )
+    print(response)
     print('summarize:end')
     # return "test"
     return response["choices"][0]["message"]['content']

@@ -19,7 +19,9 @@ https://note.com/masuidrive/n/na0ebf8a4c4f0
 
 ## How to set it up
 
-GitHub Actions で毎日午前 5 時に動くようになっています。これ以外の環境で動かす場合は適当に頑張ってください。
+GitHub Actions で毎週土曜日の午前 7 時に、公開チャンネルごとに1週間分のテキストを取得して動くようになっています。これ以外の環境で動かす場合は適当に頑張ってください。
+
+※短いテキストは無視するようにしています
 
 ### 自分の GitHub アカウントに fork する
 
@@ -84,7 +86,7 @@ GitHub Actions で毎日午前 5 時に動くようになっています。こ�
 - GitHub のリポジトリで"Settings"タブを開き、左の"Actions"→"General"を開きます
 - "Actions permissions"の"Allow all actions and reusable workflows"を選択して保存してください
 
-これらの設定をすると、毎日午前 5 時に Slack の Public channel の要約結果が投稿されます。
+これらの設定をすると、cron設定により Slack の Public channel の要約結果が投稿されます。
 
 手動で実行してみる場合には"Actions" タブを開き、左の"Summarizer"をクリックして、右の"Run workflow"をおしてください。
 

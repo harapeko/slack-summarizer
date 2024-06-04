@@ -34,8 +34,8 @@ REQUEST_CHANNEL_LIMIT = 999
 JST = ZoneInfo('Asia/Tokyo')
 now = datetime.now(JST)
 start_of_today = datetime(now.year, now.month, now.day, tzinfo=JST)
-start_of_yesterday = start_of_today - timedelta(days=1)
-start_time = datetime.combine(start_of_yesterday, time.min).replace(tzinfo=JST)
+start_of_last_week = start_of_today - timedelta(days=7)
+start_time = datetime.combine(start_of_last_week, time.min).replace(tzinfo=JST)
 end_time = datetime.combine(start_of_today, time.min).replace(tzinfo=JST)
 
 # Slack APIクライアントを初期化する
@@ -51,13 +51,13 @@ def summarize(_text):
         model="gpt-3.5-turbo",
         temperature=0.3,
         messages=[
-            {"role": "system", "content": "チャットログのフォーマットは、「本文」以上を踏まえて指示に従え"},
-            {"role": "user", "content": f"下記を箇条書きで要約せよ。\n\nはらぺこは、薬をのんでいました"}
+            {"role": "system", "content": "チャットログのフォーマットは、「本文\\n」である。「\\n」は改行である。チャットログは「&&」で複数人のチャットが連結されている。ごはん、トイレ、体調を気にしている場合は猫のチャンネルである。猫のチャンネルの場合、発言者たちはその猫、あるいは複数の猫たちの事を会話している。猫の名前はひらがな、カタカナ、漢字、愛称、くんづけ、ちゃんづけで同じ猫を指していることがある。「まつとたけ」のように複数の猫を扱っていることがある。猫のチャンネルでない場合は、保護猫団体の会運営について会話している。過去のチャットログは含まれないので意味を失っている可能性がある。以上を踏まえて指示に従え"},
+            {"role": "user", "content": f"「- 猫の名前: \\n- 健康状態：\\n- 薬：\\n- 食事：\\n- トイレ：\\n- その他：」のフォーマットを使用し、該当する行の「：」の右に内容を要約する(内容なし、特に記載なし、不明な場合は「不明」と記載する)。要約が元々のチャットログを改編してミスリードを起こす内容にならないよう事実を述べるよう厳重に注意する。以上を踏まえて、下記を箇条書きで要約せよ。\n\n{_text}"}
         ]
     )
     print('summarize:end')
-    return "test"
-    # return response["choices"][0]["message"]['content']
+    # return "test"
+    return response["choices"][0]["message"]['content']
 
 # 指定したチャンネルの履歴を取得する
 def load_merge_message(channel_id):
@@ -216,15 +216,15 @@ result_text = []
 for message in sorted_messages:
     print('message', message)
     lines = summarize(message['message']).split('\n')
-    # filtered_lines = [line for line in lines if "：不明" not in line]
-    # text = '\n'.join(filtered_lines)
-    #
-    # ts = 'p' + message['first_ts'].replace('.', '')
-    # first_link = f"{SLACK_DOMAIN}/archives/{message['channel_id']}/{ts}"
-    #
-    # result_text.append(f"<#{message['channel_id']}> {first_link}\n{text}")
+    filtered_lines = [line for line in lines if "：不明" not in line]
+    text = '\n'.join(filtered_lines)
 
-title = f"{start_of_yesterday.strftime('%Y/%m/%d')}の要約ニャン"
+    ts = 'p' + message['first_ts'].replace('.', '')
+    first_link = f"{SLACK_DOMAIN}/archives/{message['channel_id']}/{ts}"
+
+    result_text.append(f"<#{message['channel_id']}> {first_link}\n{text}")
+
+title = f"{start_of_last_week.strftime('%Y/%m/%d')}〜の一週間を要約ニャン"
 
 response = client.chat_postMessage(
     channel=CHANNEL_ID,

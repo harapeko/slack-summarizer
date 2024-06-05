@@ -46,13 +46,12 @@ client = WebClient(token=TOKEN)
 def summarize(_text):
     print('summarize:start')
     print('_text', _text)
-    # response = openai.ChatCompletion.create(
     response = client_openai.chat.completions.create(
         model="gpt-3.5-turbo",
         temperature=0.3,
         messages=[
-            {"role": "system", "content": "チャットログのフォーマットは、「本文\\n」である。「\\n」は改行である。チャットログは日本語で記述されており、すべてUTF-8マルチバイト文字のバイトシーケンスは保持され、変更されてはいけません。チャットログは「&&」で複数人のチャットが連結されている。ごはん、トイレ、体調を気にしている場合は猫のチャンネルである。猫のチャンネルの場合、発言者たちはその猫、あるいは複数の猫たちの事を会話している。猫の名前はひらがな、カタカナ、漢字、愛称、くんづけ、ちゃんづけで同じ猫を指していることがある。「まつとたけ」のように複数の猫を扱っていることがある。猫のチャンネルでない場合は、保護猫団体の会運営について会話している。過去のチャットログは含まれないので意味を失っている可能性がある。以上を踏まえて指示に従え"},
-            {"role": "user", "content": f"「- 猫の名前: \\n- 健康状態：\\n- 薬：\\n- 食事：\\n- トイレ：\\n- その他：」のフォーマットを使用し、該当する行の「：」の右に内容を要約する(内容なし、特に記載なし、不明な場合は「不明」と記載する)。要約が元々のチャットログを改編してミスリードを起こす内容にならないよう事実を述べるよう厳重に注意する。以上を踏まえて、下記を箇条書きで要約せよ。\n\n{_text}"}
+            {"role": "system", "content": "日本語で記述されており、すべてUTF-8マルチバイト文字のバイトシーケンスは保持され、変更されてはいけません。「\\n」は改行です。「&&」で複数人のチャットが連結されている。以下の情報を整理して要約し、【食事関連】、【うんちの状態】、【投薬情報】、【病気・健康問題】の4つの属性に分類してください(複数頭の場合は「■」はじまりで猫ごとに分類すること。記載のない分類は出力しないこと。箇条書きは「・」はじまりにすること)。具体的な情報だけを含めてください"},
+            {"role": "user", "content": _text}
         ]
     )
     print(response)
@@ -183,7 +182,8 @@ try:
     )
     channels = [channel for channel in channels_info['channels']
                 if not channel["is_archived"] and channel["is_channel"]]
-    # channels = [entry for entry in channels if entry['name'].startswith(('-', '_'))]
+    # お世話をしている猫のチャンネルだけに絞る
+    channels = [entry for entry in channels if entry['name'].startswith('-')]
     channels = sorted(channels, key=lambda x: int(re.findall(
         r'\d+', x["name"])[0]) if re.findall(r'\d+', x["name"]) else float('inf'))
     # print('channels', channels)
